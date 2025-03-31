@@ -1,12 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <curl/curl.h>
 
 #define PORT 12345
 #define BUFFER_SIZE 1024
+
+// Function to get AI response by calling Python script
+char* get_ai_response(const char* input) {
+    char command[BUFFER_SIZE];
+    snprintf(command, sizeof(command), "python3 ai_bot.py \"%s\"", input);
+    
+    FILE *fp = popen(command, "r");
+    if (!fp) return NULL;
+
+    static char response[BUFFER_SIZE];
+    fgets(response, BUFFER_SIZE, fp);
+    pclose(fp);
+    return response;
+}
 
 int server_fd, new_socket;
 
