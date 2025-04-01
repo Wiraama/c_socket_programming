@@ -10,4 +10,5 @@ def gen_response(prompt):
   print(response.text)
 
 if __name__ == "__main__":
-  gen_response(sys.argv[1])
+  n = len(sys.argv) - 1
+  gen_response(sys.argv[n])

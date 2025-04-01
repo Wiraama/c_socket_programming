@@ -3,21 +3,26 @@
 #include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include <curl/curl.h>
 
 #define PORT 12345
 #define BUFFER_SIZE 1024
 
 // Function to get AI response by calling Python script
 char* get_ai_response(const char* input) {
+		static char response[BUFFER_SIZE];
     char command[BUFFER_SIZE];
     snprintf(command, sizeof(command), "python3 ai_bot.py \"%s\"", input);
     
     FILE *fp = popen(command, "r");
-    if (!fp) return NULL;
-
-    static char response[BUFFER_SIZE];
-    fgets(response, BUFFER_SIZE, fp);
+    if (!fp) {
+			perror("Python execution error");
+			return "Error";
+		}
+	
+    if (fgets(response, BUFFER_SIZE, fp) == NULL) {
+			perror("Error reading AI response");
+			return "Error";
+		}
     pclose(fp);
     return response;
 }
@@ -27,7 +32,8 @@ int server_fd, new_socket;
 int main() {
 	struct sockaddr_in address; // creates address
 	socklen_t addr_len = sizeof(address); // store size of address
-	char buffer[BUFFER_SIZE]; // store messages 
+	char buffer[BUFFER_SIZE]; // store message
+	char *ai_res;
 	
 	//create main socket
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -65,7 +71,7 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-	printf("connected to client");
+	printf("connected to client\n");
 
 	// messaging
 	while (1) {
@@ -76,12 +82,12 @@ int main() {
 			break;
 		}
 
-		printf("Client: %s", buffer);
+		printf("Client: %s\n", buffer);
 
 		// take message from server
-		printf("Server: ");
-		fgets(buffer, BUFFER_SIZE, stdin);
-		send(new_socket, buffer, strlen(buffer), 0);
+		ai_res = get_ai_response(buffer);
+		printf("Server: %s", ai_res);
+		send(new_socket, ai_res, strlen(ai_res), 0);
 
 		if (strncmp(buffer, "exit", 4) == 0) {
 			printf("Exiting connection");
