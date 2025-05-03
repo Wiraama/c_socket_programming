@@ -82,12 +82,13 @@ int main() {
 			break;
 		}
 
-		printf("Client: %s\n", buffer);
+		printf("Client: %s", buffer);
 
 		// take message from server
-		ai_res = get_ai_response(buffer);
-		printf("Server: %s", ai_res);
-		send(new_socket, ai_res, strlen(ai_res), 0);
+		printf("Server: ");
+		fgets(buffer, BUFFER_SIZE, stdin);
+		//ai_res = get_ai_response(buffer);
+		send(new_socket, buffer, strlen(buffer), 0);
 
 		if (strncmp(buffer, "exit", 4) == 0) {
 			printf("Exiting connection");
